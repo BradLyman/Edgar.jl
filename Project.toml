@@ -1,0 +1,13 @@
+name = "Edgar"
+uuid = "0629bd20-9aca-4e4c-ab31-8f5b3ce56977"
+authors = ["Bradley Lyman <lyman.brad3211@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
