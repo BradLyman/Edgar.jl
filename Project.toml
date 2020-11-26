@@ -3,6 +3,10 @@ uuid = "0629bd20-9aca-4e4c-ab31-8f5b3ce56977"
 authors = ["Bradley Lyman <lyman.brad3211@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+AWS = "fbe9abb3-538b-5e4e-ba9e-bc94f4f92ebc"
+Discord = "fcbf000d-02fd-53f1-af91-d952191673d3"
+
 [compat]
 julia = "1"
 
