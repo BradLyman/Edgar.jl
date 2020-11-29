@@ -1,64 +1,78 @@
 module Edgar
 
-  using Discord
+include("./Types.jl")
+include("./Lex.jl")
 
-  Maybe{T} = Union{Some{T}, Nothing}
+using Discord
 
-  function main(secret=ENV["DISCORD_BOT_SECRET"])
+using JSON
+function prettyprint(thing::Any)::String
+    buffer = IOBuffer();
+    JSON.print(buffer, thing, 2)
+    return String(take!(buffer))
+end
+
+Maybe{T} = Union{Some{T}, Nothing}
+
+
+function take_action(::Discord.Client, ::Discord.Message, action::BotAction)
+    @error "Unsupported action $action"
+end
+
+function take_action(
+    client::Discord.Client,
+    message::Discord.Message,
+    create_trial_post::CreateTrialPost
+)
+    trial_post = """
+    Trial - $(create_trial_post.trialname)
+    $(create_trial_post.trialdate) :: $(create_trial_post.trialtime)
+
+    Tanks:
+
+    Healers:
+
+    DPS:
+
+    Or something, idfk
+    """
+
+    create_message(client, message.channel_id, content=trial_post)
+end
+
+"""
+Create a message as a reply to the provided discord message.
+"""
+function take_action(client::Discord.Client, message::Discord.Message, reply::Reply)
+    create_message(client, message.channel_id, content=reply.content)
+end
+
+function main(secret=ENV["DISCORD_BOT_SECRET"])
     general::Maybe{Int64} = nothing
     of_interest::Maybe{Int64} = nothing
 
     c = Client(
-      secret;
-      presence=(game=(name="hello world", type=AT_GAME),)
+        secret;
+        presence=(game=(name="hello world", type=AT_GAME),)
     )
 
-    function take_interest(message::Message)
-      @info """
-      taking interest in
-      $(message.content)
-      with ids $(message.channel_id) - $(message.id)
-      """
-
-      of_interest = Some(message.id)
-      general = Some(message.channel_id)
-    end
-
-    function add_to_interesting_message(line::AbstractString)
-      @info "add '$line' to interesting message"
-      actual_message =
-        get_channel_message(c, something(general), something(of_interest)) |>
-        fetchval
-
-      new_content = "$(actual_message.content) \n - $(line)"
-      @info "set '$new_content' in message"
-
-      update(c, actual_message; content=new_content)
-    end
-
-    function generate_state_message(channel_id::UInt64)::Message
-      create_message(c, channel_id; content="*Recurring Update*") |> fetchval
-    end
-
     function handler(c::Client, e::MessageCreate)
-      bot_user = me(c)
-      if bot_user.id == e.message.author.id
-        @info "ignoring message '$(e.message.content)' because it's from me"
-        return
-      end
+        msg = e.message
+        bot_user = me(c)
+        if bot_user.id == msg.author.id
+            @info "ignoring message '$(e.message.content)' because it's from me"
+            return
+        end
 
-      if startswith(e.message.content |> uppercase, "!EDGAR")
-        generate_state_message(e.message.channel_id) |> take_interest
-      elseif of_interest !== nothing
-        add_to_interesting_message(e.message.content)
-      else
-        @info "'$e' was not very interesting"
-      end
+        action = Lex.PostText(msg.content, string(msg.author.id))
+
+        take_action(c, msg, action)
     end
 
     # add the message handler, open and wait
     add_handler!(c, MessageCreate, handler)
     open(c)
     wait(c)
-  end
+end
+
 end
