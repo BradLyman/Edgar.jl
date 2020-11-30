@@ -1,0 +1,218 @@
+{
+  "metadata": {
+    "schemaVersion": "1.0",
+    "importType": "LEX",
+    "importFormat": "JSON"
+  },
+  "resource": {
+    "name": "TrialScheduler",
+    "version": "6",
+    "intents": [
+      {
+        "name": "Help",
+        "version": "1",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "help",
+          "what can you do",
+          "what kinds of things can you do"
+        ],
+        "slots": [],
+        "conclusionStatement": {
+          "messages": [
+            {
+              "groupNumber": 1,
+              "contentType": "CustomPayload",
+              "content": "Hi I'm Edgar, a conversational trial signup assistant.\nI'm still learning but some of the things I can do are:\n\n- literally nothing\n"
+            }
+          ]
+        }
+      },
+      {
+        "rejectionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "No problem!"
+            }
+          ]
+        },
+        "name": "CreateTrial",
+        "version": "13",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "I want to create a trial",
+          "I want to create a trial run",
+          "schedule a trial",
+          "schedule a trial run",
+          "setup a trial",
+          "setup a trial run",
+          "schedule a trial for next {TrialDate}",
+          "setup a trial for next {TrialDate}",
+          "schedule a trial for next {TrialDate} at {TrialTime}",
+          "setup a trial for {TrialDate} at {TrialTime}",
+          "schedule a run for {TrialTime}",
+          "setup a run at {TrialTime}",
+          "create a trial around {TrialTime}",
+          "setup a trial at {TrialTime}",
+          "setup a trial on {TrialDate} at {TrialTime}",
+          "I'd like to setup a trial {TrialDate}",
+          "I'd like to setup a trial on {TrialDate} at {TrialTime}",
+          "setup a trial {TrialDate}",
+          "create a trial {TrialDate}",
+          "I'd like to schedule a trial for {TrialDate}",
+          "I'd like to schedule a trial {TrialDate}",
+          "I'd like to setup a trial for {TrialDate}"
+        ],
+        "slots": [
+          {
+            "sampleUtterances": [],
+            "slotType": "AMAZON.DATE",
+            "obfuscationSetting": "NONE",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which day would you like to do the trial? You can say things like 'today', 'next friday', or give me an absolute date."
+                }
+              ],
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\"}",
+              "maxAttempts": 2
+            },
+            "priority": 1,
+            "defaultValueSpec": {
+              "defaultValueList": []
+            },
+            "name": "TrialDate"
+          },
+          {
+            "sampleUtterances": [],
+            "slotType": "AMAZON.TIME",
+            "obfuscationSetting": "NONE",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What time of day will you run the trial? You can say things like 6pm, 7 in the evening, or 19:00."
+                }
+              ],
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\"}",
+              "maxAttempts": 2
+            },
+            "priority": 2,
+            "defaultValueSpec": {
+              "defaultValueList": []
+            },
+            "name": "TrialTime"
+          },
+          {
+            "sampleUtterances": [
+              "call it {TrialTitle}"
+            ],
+            "slotType": "TrialName",
+            "slotTypeVersion": "1",
+            "obfuscationSetting": "NONE",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What should I call the trial? Try something like, vSS - Second Boss Prog Run, or nMoL."
+                }
+              ],
+              "responseCard": "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[]}",
+              "maxAttempts": 2
+            },
+            "priority": 3,
+            "defaultValueSpec": {
+              "defaultValueList": []
+            },
+            "name": "TrialTitle"
+          }
+        ],
+        "confirmationPrompt": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Just to confirm, you want me to schedule {TrialTitle} for {TrialDate} at {TrialTime}, right?"
+            }
+          ],
+          "maxAttempts": 3
+        },
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:451738990703:function:input_processor",
+          "messageVersion": "1.0"
+        }
+      },
+      {
+        "name": "Nothing",
+        "version": "1",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "nevermind",
+          "forget it",
+          "start over",
+          "lets start over"
+        ],
+        "slots": []
+      }
+    ],
+    "slotTypes": [
+      {
+        "description": "The name of a trial to run",
+        "name": "TrialName",
+        "version": "1",
+        "enumerationValues": [
+          {
+            "value": "vSS",
+            "synonyms": [
+              "vet sunspire"
+            ]
+          },
+          {
+            "value": "nss",
+            "synonyms": [
+              "normal sunspire"
+            ]
+          }
+        ],
+        "valueSelectionStrategy": "TOP_RESOLUTION"
+      }
+    ],
+    "voiceId": "0",
+    "childDirected": false,
+    "locale": "en-US",
+    "idleSessionTTLInSeconds": 600,
+    "clarificationPrompt": {
+      "messages": [
+        {
+          "contentType": "PlainText",
+          "content": "I'm confused, can you repeat or rephrase that?"
+        },
+        {
+          "contentType": "PlainText",
+          "content": "I don't understand, mind rephrasing that?"
+        }
+      ],
+      "maxAttempts": 2
+    },
+    "abortStatement": {
+      "messages": [
+        {
+          "contentType": "PlainText",
+          "content": "I don't understand. I'm still learning, but in the meantime try asking me what I *can* do =D"
+        }
+      ]
+    },
+    "detectSentiment": true,
+    "enableModelImprovements": true
+  }
+}
