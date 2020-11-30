@@ -1,78 +1,56 @@
+"""
+This module is the application's entry point. It is responsible for connecting
+to discord and routing messages through handlers.
+"""
 module Edgar
-
-include("./Types.jl")
-include("./Lex.jl")
 
 using Discord
 
-using JSON
-function prettyprint(thing::Any)::String
-    buffer = IOBuffer();
-    JSON.print(buffer, thing, 2)
-    return String(take!(buffer))
-end
+include("./Types.jl")
+include("./Actions.jl")
+include("./Interactive.jl")
 
-Maybe{T} = Union{Some{T}, Nothing}
-
-
-function take_action(::Discord.Client, ::Discord.Message, action::BotAction)
-    @error "Unsupported action $action"
-end
-
-function take_action(
-    client::Discord.Client,
-    message::Discord.Message,
-    create_trial_post::CreateTrialPost
-)
-    trial_post = """
-    Trial - $(create_trial_post.trialname)
-    $(create_trial_post.trialdate) :: $(create_trial_post.trialtime)
-
-    Tanks:
-
-    Healers:
-
-    DPS:
-
-    Or something, idfk
-    """
-
-    create_message(client, message.channel_id, content=trial_post)
-end
 
 """
-Create a message as a reply to the provided discord message.
-"""
-function take_action(client::Discord.Client, message::Discord.Message, reply::Reply)
-    create_message(client, message.channel_id, content=reply.content)
-end
+Start the discord bot using the provided bot secret from the developer portal.
+The secret can be provided as an argument to `main()` or it can come from the
+`DISCORD_BOT_SECRET` environment variable.
 
+Example usage:
+
+    > julia --project=. -e 'using Edgar; Edgar.main()'
+
+"""
 function main(secret=ENV["DISCORD_BOT_SECRET"])
-    general::Maybe{Int64} = nothing
-    of_interest::Maybe{Int64} = nothing
+    client = Client(secret; presence=(game=(name="λ(x) = x", type=AT_GAME),))
 
-    c = Client(
-        secret;
-        presence=(game=(name="hello world", type=AT_GAME),)
-    )
+    add_handler!(client, MessageCreate, on_message_create)
 
-    function handler(c::Client, e::MessageCreate)
-        msg = e.message
-        bot_user = me(c)
-        if bot_user.id == msg.author.id
-            @info "ignoring message '$(e.message.content)' because it's from me"
-            return
-        end
+    open(client)
+    wait(client)
+end
 
-        action = Lex.PostText(msg.content, string(msg.author.id))
+"""
+This function is invoked any time that a message is created in a server which
+uses this bot.
+"""
+function on_message_create(client::Client, e::MessageCreate)
+    if from_self(client, e.message) return end
 
-        take_action(c, msg, action)
-    end
+    action = Interactive.handle(e.message.content, string(e.message.author.id))
 
-    # add the message handler, open and wait
-    add_handler!(c, MessageCreate, handler)
-    open(c)
-    wait(c)
+    take_action(client, e.message, action)
+end
+
+"Evaluates to TRUE when the message was sent by this bot."
+function from_self(client::Client, message::Message)::Bool
+    bot_user = Discord.me(client)
+    result = bot_user.id == message.author.id
+    @debug """
+    Message '$(message.content)'
+    Is $(result ? "from" : "not from") this bot.
+    """
+    result
 end
 
 end
